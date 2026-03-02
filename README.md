@@ -123,3 +123,7 @@ To choose a profile each time:
 - **Siri**: "Hey Siri, Make Coffee"
 - **Home Screen**: Long-press shortcut → Add to Home Screen
 - **Lock Screen**: Add as a widget (iOS 16+)
+
+## Credits
+
+Built using [fellow-aiden](https://github.com/9b/fellow-aiden) by [Brandon Dixon (9b)](https://github.com/9b)
