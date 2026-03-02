@@ -1,0 +1,52 @@
+name: Make Coffee
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile_name:
+        description: 'Brew profile name (must match a profile on your Aiden)'
+        required: false
+        default: 'Default'
+        type: string
+      water_amount:
+        description: 'Water amount in ml (150-1500)'
+        required: false
+        default: '300'
+        type: string
+      delay_minutes:
+        description: 'Delay before brewing starts (minimum 6 minutes)'
+        required: false
+        default: '6'
+        type: string
+
+jobs:
+  brew:
+    name: ☕ Start Brewing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Trigger brew
+        env:
+          FELLOW_EMAIL: ${{ secrets.FELLOW_EMAIL }}
+          FELLOW_PASSWORD: ${{ secrets.FELLOW_PASSWORD }}
+        run: |
+          uv run brew.py \
+            --profile "${{ inputs.profile_name }}" \
+            --water "${{ inputs.water_amount }}" \
+            --delay "${{ inputs.delay_minutes }}" \
+            --no-cleanup
+
+      - name: Summary
+        run: |
+          echo "## ☕ Coffee Brewing!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Your Fellow Aiden is preparing coffee with:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Profile:** ${{ inputs.profile_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Water:** ${{ inputs.water_amount }}ml" >> $GITHUB_STEP_SUMMARY
+          echo "- **Delay:** ${{ inputs.delay_minutes }} minutes" >> $GITHUB_STEP_SUMMARY

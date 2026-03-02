@@ -1,0 +1,59 @@
+name: List Profiles
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every Sunday at 6am UTC
+    - cron: '0 6 * * 0'
+
+jobs:
+  list:
+    name: 📋 List Brew Profiles
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: List profiles
+        env:
+          FELLOW_EMAIL: ${{ secrets.FELLOW_EMAIL }}
+          FELLOW_PASSWORD: ${{ secrets.FELLOW_PASSWORD }}
+        run: |
+          echo "## 📋 Available Brew Profiles" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          uv run brew.py --list-profiles 2>&1 | tee profiles.txt
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep "^  -" profiles.txt >> $GITHUB_STEP_SUMMARY || echo "No profiles found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Update README with profiles
+        run: |
+          # Extract profile names
+          echo "| Profile | ID |" > profiles_table.md
+          echo "|---------|-----|" >> profiles_table.md
+          grep "^  -" profiles.txt | while read line; do
+            # Parse "  - Name (id: pX)" format
+            name=$(echo "$line" | sed 's/^  - \(.*\) (id: .*/\1/')
+            id=$(echo "$line" | sed 's/.*id: \(.*\))/\1/')
+            echo "| $name | $id |" >> profiles_table.md
+          done
+          
+          # Update README between markers
+          if grep -q "<!-- PROFILES:START -->" README.md; then
+            # Replace existing section
+            sed -i '/<!-- PROFILES:START -->/,/<!-- PROFILES:END -->/c\<!-- PROFILES:START -->\n<!-- AUTO-GENERATED - DO NOT EDIT -->\n'"$(cat profiles_table.md | tr '\n' '\f' | sed 's/\f/\\n/g')"'\n<!-- PROFILES:END -->' README.md
+          fi
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --staged --quiet || git commit -m "Update brew profiles list"
+          git push

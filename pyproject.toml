@@ -1,0 +1,20 @@
+[project]
+name = "coffee-now"
+version = "1.0.0"
+description = "Trigger Fellow Aiden coffee maker from GitHub Actions"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "fellow-aiden @ git+https://github.com/9b/fellow-aiden.git",
+]
+
+[project.scripts]
+coffee-now = "brew:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
